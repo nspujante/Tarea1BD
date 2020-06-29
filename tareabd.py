@@ -43,14 +43,44 @@ def create():
         hpAct=choice(range(int(hp)))#va entre 0-(hp-1)
         stateList=["Envenenado", "Paralizado", "Quemado", "Dormido", "Congelado", None]
         state=choice(stateList)
-        date=datetime.now()
-        cur.execute("INSERT INTO SANSANITO (pokedex,nombre,type1,type2,hp_actual,hp_max,legendary,estado,fechyhora,prioridad) VALUES (?,?,?,?,?,?,?,?,?,?)",(int(dex), nom, typ1, typ2, hpAct, int(hp), legen, state, date, (int(hp)-hpAct)))##hacer lo de poke id
+        if state!=None: #revisa si el pokemon tiene algun estado para agregar la prioridad
+            prio=(int(hp)-hpAct)+10
+        else:
+            prio=(int(hp)-hpAct)
+        date=datetime.now()##ver si es mejor tener fecha aleatoria
+        cur.execute("INSERT INTO SANSANITO (pokedex,nombre,type1,type2,hp_actual,hp_max,legendary,estado,fechyhora,prioridad) VALUES (?,?,?,?,?,?,?,?,?,?)",(int(dex), nom, typ1, typ2, hpAct, int(hp), legen, state, date, prio))
         cur.commit()
-        cur.execute("SELECT id FROM SANSANITO WHERE fechyhora=?",(date))
+        cur.execute("SELECT id FROM SANSANITO WHERE fechyhora=?",(date)) #compara la hora de netrada con la hora registrada para obtener el id
         pokeId=cur.fetchone()
+        #print(pokeId)
         print("Se ingreso el pokemon "+nom+" con el ID ",pokeId[0])
+    else:
+        if legen=='1':
+            print("Hacer el caso cuando se ingresa un legndario, tener una view puede servir")
+
+def read():
+    print("Escoja una opcion")
+    print("1. Mostrar estadisticas de un pokemon")
+    print("2. Mostrar estadisticas de todos los pokemones")
+    inp=int(input("Opcion: "))
+    if inp==1:
+        pokeID=int(input("Ingrese el ID del pokemon que desea verificar: "))
+        cur.execute("SELECT * FROM SANSANITO WHERE id=?",(pokeID))
+        poke=cur.fetchone()
+        (idd, dex, nom, typ1, typ2, hpAct, hp, legen, estado, fecha, prio)=poke
+        if typ2==None:
+            tipo=typ1
+        else:
+            tipo=str(typ1)+" y "+str(typ2)
+        if legen=='1':
+            leg="Si"
+        else:
+            leg="No"
+        print("ID:",idd,"Pokedex:",dex,"Nombre:",nom,"Tipo:",tipo,"HP Actual:",hpAct,"HP Max",hp,"Es legendario?:",leg,"Estado:",estado,"fecha y hora de ingreso:",fecha,"Prioridad",prio)
+
 
 #poyo_table()
 #sansanito_table()
-create()
-create()
+#create()
+#create()
+read()
