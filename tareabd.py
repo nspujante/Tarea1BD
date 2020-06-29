@@ -65,7 +65,7 @@ def read():
     inp=int(input("Opcion: "))
     if inp==1:
         pokeID=int(input("Ingrese el ID del pokemon que desea verificar: "))
-        cur.execute("SELECT * FROM SANSANITO WHERE id=?",(pokeID))
+        cur.execute("SELECT * FROM SANSANITO WHERE id=?",(pokeID)) #recibe todos los datos de la fila con la id dada
         poke=cur.fetchone()
         (idd, dex, nom, typ1, typ2, hpAct, hp, legen, estado, fecha, prio)=poke
         if typ2==None:
@@ -76,11 +76,41 @@ def read():
             leg="Si"
         else:
             leg="No"
-        print("ID:",idd,"Pokedex:",dex,"Nombre:",nom,"Tipo:",tipo,"HP Actual:",hpAct,"HP Max",hp,"Es legendario?:",leg,"Estado:",estado,"fecha y hora de ingreso:",fecha,"Prioridad",prio)
+        if estado==None:
+            estado="Sin estado"
+        print("|ID:",idd,"|Pokedex:",dex,"|Nombre:",nom,"|Tipo:",tipo,"|HP Actual:",hpAct,"|HP Max:",hp,"|Es legendario:",leg,"|Estado:",estado,"|fecha y hora de ingreso:",fecha,"|Prioridad",prio,"|")
+    elif inp==2:
+        cur.execute("SELECT * FROM SANSANITO") #recibe todos los datos de todas las filas
+        pokeList=cur.fetchall()
+        for poke in pokeList: #recorre la lista con las tuplas de cada fila
+            (idd, dex, nom, typ1, typ2, hpAct, hp, legen, estado, fecha, prio)=poke #descomprime la tupla correspondiente a una fila de la tabla
+            if typ2==None:
+                tipo=typ1
+            else:
+                tipo=str(typ1)+" y "+str(typ2)
+            if legen=='1':
+                leg="Si"
+            else:
+                leg="No"
+            if estado==None:
+                estado="Sin estado"
+            print("|ID:",idd,"|Pokedex:",dex,"|Nombre:",nom,"|Tipo:",tipo,"|HP Actual:",hpAct,"|HP Max:",hp,"|Es legendario:",leg,"|Estado:",estado,"|fecha y hora de ingreso:",fecha,"|Prioridad",prio,"|")
 
+#def update():
+
+
+def delete():
+    pokeID=int(input("Ingrese la ID del pokemon a eliminar: "))
+    cur.execute("SELECT nombre FROM SANSANITO WHERE id=?",(pokeID)) #compara la hora de netrada con la hora registrada para obtener el id
+    nom=cur.fetchone()[0]
+    cur.execute("DELETE FROM SANSANITO WHERE id=?",(pokeID))
+    cur.commit()
+    print("Se ha eliminado a",nom,"con el ID",pokeID)
 
 #poyo_table()
 #sansanito_table()
 #create()
-#create()
+create()
+read()
+delete()
 read()
