@@ -31,6 +31,11 @@ def sansanito_table():
     cur.commit()
     print("Se ha creado la tabla Sansanito de forma exitosa")
 
+def trigger_prioridad(): ##Terminar
+    cur.execute("CREATE OR REPLACE TRIGGER NEW_PRIORIDAD")
+    cur.execute("AFTER UPDATE ON SANSANITO")
+
+
 def create():
     inPok=input("Ingrese el nombre del pokemon a ingresar: ")
     cur.execute("SELECT * FROM POYO WHERE nombre=?",(inPok))
@@ -57,6 +62,7 @@ def create():
     else:
         if legen=='1':
             print("Hacer el caso cuando se ingresa un legndario, tener una view puede servir")
+    input("Pulse ENTER para continuar")
 
 def read():
     print("Escoja una opcion")
@@ -95,9 +101,55 @@ def read():
             if estado==None:
                 estado="Sin estado"
             print("|ID:",idd,"|Pokedex:",dex,"|Nombre:",nom,"|Tipo:",tipo,"|HP Actual:",hpAct,"|HP Max:",hp,"|Es legendario:",leg,"|Estado:",estado,"|fecha y hora de ingreso:",fecha,"|Prioridad",prio,"|")
+    input("Pulse ENTER para continuar")
 
-#def update():
-
+def update():
+    pokeID=input("Seleccione el ID del pokemon a modificar: ")
+    cur.execute("SELECT * FROM SANSANITO WHERE id=?",(pokeID)) #recibe todos los datos de la fila con la id dada
+    poke=cur.fetchone()
+    (idd, dex, nom, typ1, typ2, hpAct, hp, legen, estado, fecha, prio)=poke
+    while True:
+        print("Ingrese el parametro que desea editar:")
+        print("1. HP Actual")
+        print("2. Estado")
+        print("0. Terminar de editar")
+        inn=int(input("Opcion: "))
+        if inn==0:
+            break
+        #incluir trigger para el calculo de la prioridad
+        elif inn==1: #cambiar el hp actual
+            newHp=int(input("Ingrese el hp actual (debe ser menor o igual a "+str(hp)+"): "))
+            cur.execute("UPDATE SANSANITO SET hp_actual=? WHERE id=?",(newHp,pokeID))
+            cur.commit()
+        elif inn==2: #cambiar el estado
+            print("Ingrese el estado que desea colocar:")
+            print("1. Envenenado")
+            print("2. Paralizado")
+            print("3. Quemado")
+            print("4. Dormido")
+            print("5. Congelado")
+            print("6. Sin estado")
+            newEstado=int(input("Opcion: "))
+            if newEstado==1:
+                cur.execute("UPDATE SANSANITO SET estado='Envenenado' WHERE id=?",(pokeID))
+                cur.commit()
+            elif newEstado==2:
+                cur.execute("UPDATE SANSANITO SET estado='Paralizado' WHERE id=?",(pokeID))
+                cur.commit()
+            elif newEstado==3:
+                cur.execute("UPDATE SANSANITO SET estado='Quemado' WHERE id=?",(pokeID))
+                cur.commit()
+            elif newEstado==4:
+                cur.execute("UPDATE SANSANITO SET estado='Dormido' WHERE id=?",(pokeID))
+                cur.commit()
+            elif newEstado==5:
+                cur.execute("UPDATE SANSANITO SET estado='Congelado' WHERE id=?",(pokeID))
+                cur.commit()
+            elif newEstado==6:
+                cur.execute("UPDATE SANSANITO SET estado=? WHERE id=?",(None,pokeID))
+                cur.commit()
+            else:
+                print("Ingrese un estado valido")
 
 def delete():
     pokeID=int(input("Ingrese la ID del pokemon a eliminar: "))
@@ -106,11 +158,160 @@ def delete():
     cur.execute("DELETE FROM SANSANITO WHERE id=?",(pokeID))
     cur.commit()
     print("Se ha eliminado a",nom,"con el ID",pokeID)
+    input("Pulse ENTER para continuar")
 
+def top10max():
+    cur.execute("SELECT prioridad,id,nombre FROM SANSANITO ORDER BY prioridad DESC")
+    pokeList=cur.fetchall()
+    cont=0
+    for poke in pokeList:
+        (prio, idd, nom)=poke
+        if cont<10:
+            print("|ID:",idd,"|Nombre:",nom,"|Prioridad:",prio,"|")
+    input("Pulse ENTER para continuar")
+
+def top10min():
+    cur.execute("SELECT prioridad,id,nombre FROM SANSANITO ORDER BY prioridad ASC")
+    pokeList=cur.fetchall()
+    cont=0
+    for poke in pokeList:
+        (prio, idd, nom)=poke
+        if cont<10:
+            print("|ID:",idd,"|Nombre:",nom,"|Prioridad:",prio,"|")
+    input("Pulse ENTER para continuar")
+
+def pokeTime():
+    cur.execute("SELECT fechyhora,id,nombre FROM SANSANITO ORDER BY fechyhora ASC")
+    poke=cur.fetchone()
+    (fecha, idd, nom)=poke
+    print("|ID:",idd,"|Nombre:",nom,"|Fecha y hora de ingreso:",fecha,"|")
+    input("Pulse ENTER para continuar")
+
+def pokeState():
+    print("Ingrese el estado que desea ver:")
+    print("1. Envenenado")
+    print("2. Paralizado")
+    print("3. Quemado")
+    print("4. Dormido")
+    print("5. Congelado")
+    print("6. Sin estado")
+    userState=int(input("Opcion: "))
+    if userState==1:
+        cur.execute("SELECT id,nombre,estado FROM SANSANITO WHERE estado='Envenenado'")
+        pokeList=cur.fetchall()
+        if len(pokeList)==0:
+            print("No hay pokemones con ese estado")
+        else:
+            for poke in pokeList:
+                (idd, nom, state)=poke
+                print("|ID:",idd,"|Nombre:",nom,"|Estado:",state,"|")
+    elif userState==2:
+        cur.execute("SELECT id,nombre,estado FROM SANSANITO WHERE estado='Paralizado'")
+        pokeList=cur.fetchall()
+        if len(pokeList)==0:
+            print("No hay pokemones con ese estado")
+        else:
+            for poke in pokeList:
+                (idd, nom, state)=poke
+                print("|ID:",idd,"|Nombre:",nom,"|Estado:",state,"|")
+    elif userState==3:
+        cur.execute("SELECT id,nombre,estado FROM SANSANITO WHERE estado='Quemado'")
+        pokeList=cur.fetchall()
+        if len(pokeList)==0:
+            print("No hay pokemones con ese estado")
+        else:
+            for poke in pokeList:
+                (idd, nom, state)=poke
+                print("|ID:",idd,"|Nombre:",nom,"|Estado:",state,"|")
+    elif userState==4:
+        cur.execute("SELECT id,nombre,estado FROM SANSANITO WHERE estado='Dormido'")
+        pokeList=cur.fetchall()
+        if len(pokeList)==0:
+            print("No hay pokemones con ese estado")
+        else:
+            for poke in pokeList:
+                (idd, nom, state)=poke
+                print("|ID:",idd,"|Nombre:",nom,"|Estado:",state,"|")
+    elif userState==5:
+        cur.execute("SELECT id,nombre,estado FROM SANSANITO WHERE estado='Congelado'")
+        pokeList=cur.fetchall()
+        if len(pokeList)==0:
+            print("No hay pokemones con ese estado")
+        else:
+            for poke in pokeList:
+                (idd, nom, state)=poke
+                print("|ID:",idd,"|Nombre:",nom,"|Estado:",state,"|")
+    elif userState==6:
+        cur.execute("SELECT id,nombre,estado FROM SANSANITO WHERE estado IS NULL")
+        pokeList=cur.fetchall()
+        if len(pokeList)==0:
+            print("No hay pokemones con ese estado")
+        else:
+            for poke in pokeList:
+                (idd, nom, state)=poke
+                print("|ID:",idd,"|Nombre:",nom,"|Estado:",state,"|")
+    input("Pulse ENTER para continuar")
+
+def printPrioridad():
+    cur.execute("SELECT nombre,hp_actual,hp_max,prioridad FROM SANSANITO ORDER BY prioridad DESC")
+    pokeList=cur.fetchall()
+    for poke in pokeList:
+        (nom,hpAct,hp,prio)=poke
+        print("|Nombre:",nom,"|HP Actual:",hpAct,"|HP Max",hp,"|Prioridad:",prio,"|")
+    input("Pulse ENTER para continuar")
+
+
+#Main
+print("Bienvenido(a) al Sansanito Pokemon!")
 #poyo_table()
 #sansanito_table()
-#create()
-create()
-read()
-delete()
-read()
+while True:
+    print("Ingrese la accion que desea hacer: ")
+    print("1. Operaciones CRUD")
+    print("2. Ingresar un pokemon")
+    print("3. Ver los 10 pokemones con mayor prioridad")
+    print("4. Ver los 10 pokemones con menor prioridad")
+    print("5. Ver todos los pokemones con un estado especifico")
+    print("6. Ver todos los pokemones legendarios")
+    print("7. Ver el pokemon que lleva mas tiempo ingresado")
+    print("8. Ver el pokemon mas repetido")
+    print("9. Ver nombre, HP actual, HP Max y prioridad de todos los Pokemon, ordenados por prioridad")
+    print("0. Salir")
+    user=int(input("Opcion: "))
+    if user==0:
+        break
+    elif user==1:
+        while True:
+            print("Ingrese la accion que desea hacer: ")
+            print("1. Create")
+            print("2. Read")
+            print("3. Update")
+            print("4. Delete")
+            print("0. Volver")
+            userCRUD=int(input("Opcion: "))
+            if userCRUD==0:
+                break
+            elif userCRUD==1:
+                create()
+            elif userCRUD==2:
+                read()
+            elif userCRUD==3:
+                update()
+            elif userCRUD==4:
+                delete()
+            else:
+                print("Ingrese una opcion valida")
+    elif user==2:
+        create()##cambiar
+    elif user==3:
+        top10max()
+    elif user==4:
+        top10min()
+    elif user==5:
+        pokeState()
+    elif user==7:
+        pokeTime()
+    elif user==9:
+        printPrioridad()
+    else:
+        print("Ingrese una opcion valida")
