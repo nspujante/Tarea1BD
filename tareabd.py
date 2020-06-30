@@ -31,9 +31,23 @@ def sansanito_table():
     cur.commit()
     print("Se ha creado la tabla Sansanito de forma exitosa")
 
-def trigger_prioridad(): ##Terminar
-    cur.execute("CREATE OR REPLACE TRIGGER NEW_PRIORIDAD")
-    cur.execute("AFTER UPDATE ON SANSANITO")
+def trigger_prioridad():
+    cur.execute("""
+    CREATE OR REPLACE TRIGGER prioridad BEFORE UPDATE ON SANSANITO FOR EACH ROW
+    BEGIN
+        IF :NEW.estado IS NOT NULL THEN 
+            :NEW.prioridad := :NEW.hp_max - :NEW.hp_actual + 10; 
+        END IF;
+        IF :NEW.estado IS NULL THEN 
+            :NEW.prioridad := :NEW.hp_max - :NEW.hp_actual; 
+        END IF;
+    END;
+    """)
+    cur.commit()
+
+def view_legendary():
+    cur.execute("CREATE OR REPLACE VIEW VW_LEGENDARIOS AS (SELECT ID, POKEDEX, NOMBRE, TYPE1, TYPE2, HP_ACTUAL, HP_MAX, LEGENDARY, ESTADO, FECHYHORA, PRIORIDAD FROM SANSANITO WHERE LEGENDARY='1')")
+    cur.commit()
 
 def createState():
     print("Ingrese el estado del pokemon:")
@@ -77,7 +91,6 @@ def create():
         cur.commit()
         cur.execute("SELECT id FROM SANSANITO WHERE fechyhora=?",(date)) #compara la hora de netrada con la hora registrada para obtener el id
         pokeId=cur.fetchone()
-        #print(pokeId)
         print("Se ingreso el pokemon "+nom+" con el ID ",pokeId[0])
     else:
         if legen=='1':
@@ -188,6 +201,9 @@ def top10max():
         (prio, idd, nom)=poke
         if cont<10:
             print("|ID:",idd,"|Nombre:",nom,"|Prioridad:",prio,"|")
+            cont+=1
+        else:
+            break
     input("Pulse ENTER para continuar")
 
 def top10min():
@@ -198,6 +214,9 @@ def top10min():
         (prio, idd, nom)=poke
         if cont<10:
             print("|ID:",idd,"|Nombre:",nom,"|Prioridad:",prio,"|")
+            cont+=1
+        else:
+            break
     input("Pulse ENTER para continuar")
 
 def pokeTime():
@@ -289,10 +308,38 @@ def repetido():
         print("El pokemon mas repetido es",repe[0][0],"con",int(repe[0][1]),"repeticiones")
     input("Pulse ENTER para continuar")
 
+def printLegendarios():
+    cur.execute("SELECT * FROM VW_LEGENDARIOS")
+    legenList=cur.fetchall()
+    if len(legenList)==0:
+        print("No hay pokemones legendarios ingresados")
+    else:
+        for legen in legenList:
+            (idd, dex, nom, typ1, typ2, hpAct, hp, legen, estado, fecha, prio)=legen #descomprime la tupla correspondiente a una fila de la tabla
+            if typ2==None:
+                tipo=typ1
+            else:
+                tipo=str(typ1)+" y "+str(typ2)
+            if legen=='1':
+                leg="Si"
+            else:
+                leg="No"
+            if estado==None:
+                estado="Sin estado"
+            print("|ID:",idd,"|Pokedex:",dex,"|Nombre:",nom,"|Tipo:",tipo,"|HP Actual:",hpAct,"|HP Max:",hp,"|Es legendario:",leg,"|Estado:",estado,"|fecha y hora de ingreso:",fecha,"|Prioridad",prio,"|")
+    input("Pulse ENTER para continuar")
+
+def llenarArtificial(): ##terminar
+    hpAct=choice(range(int(hp)))#va entre 0-(hp-1)
+    stateList=["Envenenado", "Paralizado", "Quemado", "Dormido", "Congelado", None]
+    state=choice(stateList)
+
 #Main
 print("Bienvenido(a) al Sansanito Pokemon!")
 #poyo_table()
 #sansanito_table()
+trigger_prioridad()
+view_legendary()
 while True:
     print("Ingrese la accion que desea hacer: ")
     print("1. Operaciones CRUD")
@@ -337,6 +384,8 @@ while True:
         top10min()
     elif user==5:
         pokeState()
+    elif user==6:
+        printLegendarios()
     elif user==7:
         pokeTime()
     elif user==8:
@@ -346,9 +395,3 @@ while True:
     else:
         print("Ingrese una opcion valida")
 
-"""
-util para hacer el relleno artificial
-hpAct=choice(range(int(hp)))#va entre 0-(hp-1)
-stateList=["Envenenado", "Paralizado", "Quemado", "Dormido", "Congelado", None]
-state=choice(stateList)
-"""
