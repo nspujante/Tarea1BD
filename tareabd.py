@@ -35,6 +35,27 @@ def trigger_prioridad(): ##Terminar
     cur.execute("CREATE OR REPLACE TRIGGER NEW_PRIORIDAD")
     cur.execute("AFTER UPDATE ON SANSANITO")
 
+def createState():
+    print("Ingrese el estado del pokemon:")
+    print("1. Envenenado")
+    print("2. Paralizado")
+    print("3. Quemado")
+    print("4. Dormido")
+    print("5. Congelado")
+    print("6. Sin estado")
+    newEstado=int(input("Opcion: "))
+    if newEstado==1:
+        return "Envenenado"
+    elif newEstado==2:
+        return "Paralizado"
+    elif newEstado==3:
+        return "Quemado"
+    elif newEstado==4:
+        return "Dormido"
+    elif newEstado==5:
+        return "Congelado"
+    elif newEstado==6:
+        return None
 
 def create():
     inPok=input("Ingrese el nombre del pokemon a ingresar: ")
@@ -45,9 +66,8 @@ def create():
     lenght=len(lenghtList)#se usa el largo de la lista para ver cuantos pokemones hay
     if lenght<50:
         (dex, nom, typ1, typ2, hp, legen)=pok #descomprime la tupla
-        hpAct=choice(range(int(hp)))#va entre 0-(hp-1)
-        stateList=["Envenenado", "Paralizado", "Quemado", "Dormido", "Congelado", None]
-        state=choice(stateList)
+        hpAct=int(input("Ingrese el hp actual (debe ser menor o igual a "+str(hp)+"): "))
+        state=createState() #llama a la funcion auxiliar para determinar el estado
         if state!=None: #revisa si el pokemon tiene algun estado para agregar la prioridad
             prio=(int(hp)-hpAct)+10
         else:
@@ -122,7 +142,7 @@ def update():
             cur.execute("UPDATE SANSANITO SET hp_actual=? WHERE id=?",(newHp,pokeID))
             cur.commit()
         elif inn==2: #cambiar el estado
-            print("Ingrese el estado que desea colocar:")
+            print("Ingrese el nuevo estado del pokemon:")
             print("1. Envenenado")
             print("2. Paralizado")
             print("3. Quemado")
@@ -260,6 +280,14 @@ def printPrioridad():
         print("|Nombre:",nom,"|HP Actual:",hpAct,"|HP Max",hp,"|Prioridad:",prio,"|")
     input("Pulse ENTER para continuar")
 
+def repetido():
+    cur.execute("SELECT nombre, COUNT( nombre ) AS total FROM SANSANITO GROUP BY nombre ORDER BY total DESC ")
+    repe=cur.fetchall()
+    if repe[0][1]==1:
+        print("No hay pokemones repetidos")
+    else:
+        print("El pokemon mas repetido es",repe[0][0],"con",int(repe[0][1]),"repeticiones")
+    input("Pulse ENTER para continuar")
 
 #Main
 print("Bienvenido(a) al Sansanito Pokemon!")
@@ -311,7 +339,16 @@ while True:
         pokeState()
     elif user==7:
         pokeTime()
+    elif user==8:
+        repetido()
     elif user==9:
         printPrioridad()
     else:
         print("Ingrese una opcion valida")
+
+"""
+util para hacer el relleno artificial
+hpAct=choice(range(int(hp)))#va entre 0-(hp-1)
+stateList=["Envenenado", "Paralizado", "Quemado", "Dormido", "Congelado", None]
+state=choice(stateList)
+"""
