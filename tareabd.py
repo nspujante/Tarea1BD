@@ -491,7 +491,7 @@ def llenarArtificial(): ##terminar
         cur.commit()
         cur.execute("SELECT id FROM SANSANITO WHERE fechyhora=?",(date)) #compara la hora de netrada con la hora registrada para obtener el id
         pokeId=cur.fetchone()
-        print("Se ingreso el pokemon "+nom+" con el ID ",pokeId[0])
+        #print("Se ingreso el pokemon "+nom+" con el ID ",pokeId[0])
 
 
 #Main
