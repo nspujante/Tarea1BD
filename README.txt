@@ -2,7 +2,8 @@ Nicolás Pujante
 201873533-7
 
 Instrucciones:
-	Se necesita Python 3 y tener pyodbc instalado en el PATH
+	-Se necesita Python 3 y tener pyodbc instalado en el PATH
+	-Si se corre la tarea en vscode, abrir la carpeta de la tarea, si no puede dar error al abrir el .csv
 
 Uso del Trigger:
 	El trigger se utiliza para actualizar la prioridad de los pokemones
