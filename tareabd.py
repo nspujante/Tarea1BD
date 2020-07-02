@@ -20,7 +20,7 @@ def poyo_table():
     cur.execute("DROP TABLE POYO") #comentar si no se han creado las tablas
     #inicia la tabla POYO
     cur.execute("CREATE TABLE POYO(pokedex INTEGER NOT NULL,nombre VARCHAR2(32) NOT NULL,type1 VARCHAR2(32) NOT NULL,type2 VARCHAR2(32),hp_total INTEGER NOT NULL,legendary CHAR(1) NOT NULL)")
-    arch=open("C:/Users/Nicolás/Desktop/tareabd/pokemon.csv","r")
+    arch=open("pokemon.csv","r")
     for row in arch:
         row_list=row.strip().split(",")
         if row_list[0]!="#":#se salta la primera linea del csv
