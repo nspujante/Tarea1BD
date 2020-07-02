@@ -6,7 +6,16 @@ from datetime import datetime
 conn = pyodbc.connect("DRIVER={Oracle en OraDB18Home1};DBQ=XE;Uid=boji;Pwd=Compaq123;DATABASE=bojiBD")
 cur = conn.cursor()
 
-#funcion para crear la tabla poyo
+"""
+Funcion: poyo_table
+
+Input: Ninguno
+
+Output: Ninguno
+
+Funcionalidad: Crea la tabla POYO en la base de datos, lee el csv de los pokemones
+                e ingresa todos los datos extraidos a la tabla.
+"""
 def poyo_table():
     cur.execute("DROP TABLE POYO") #comentar si no se han creado las tablas
     #inicia la tabla POYO
@@ -24,13 +33,31 @@ def poyo_table():
     cur.commit()
     print("Se ha creado la tabla POYO de forma exitosa")
 
-#funcion para crear la tabla sansanito
+"""
+Funcion: sansanito_table
+
+Input: Ninguno
+
+Output: Ninguno
+
+Funcionalidad: Crea la tabla SANSANITO en la base de datos dejandola vacia
+"""
 def sansanito_table():
     cur.execute("DROP TABLE SANSANITO") #comentar si no se han creado las tablas
     cur.execute("CREATE TABLE SANSANITO(id INTEGER GENERATED ALWAYS as IDENTITY(START with 1 INCREMENT by 1) PRIMARY KEY, pokedex INTEGER NOT NULL,nombre VARCHAR2(32) NOT NULL,type1 VARCHAR2(32) NOT NULL,type2 VARCHAR2(32),hp_actual INTEGER NOT NULL ,hp_max INTEGER NOT NULL,legendary CHAR(1) NOT NULL, estado VARCHAR2(16), fechyhora DATE NOT NULL, prioridad INTEGER NOT NULL)")
     cur.commit()
     print("Se ha creado la tabla Sansanito de forma exitosa")
 
+"""
+Funcion: trigger_prioridad
+
+Input: Ninguno
+
+Output: Ninguno
+
+Funcionalidad: Crea un disparador que actualiza la prioridad de los pokemon
+                al hacer un update en la tabla SANSANITO
+"""
 def trigger_prioridad():
     cur.execute("""
     CREATE OR REPLACE TRIGGER prioridad BEFORE UPDATE ON SANSANITO FOR EACH ROW
@@ -45,10 +72,30 @@ def trigger_prioridad():
     """)
     cur.commit()
 
+"""
+Funcion: view_legendary
+
+Input: Ninguno
+
+Output: Ninguno
+
+Funcionalidad: Crea una vista para guardar los pokemones legendarios ingresados
+                en la tabla SANSANITO
+"""
 def view_legendary():
     cur.execute("CREATE OR REPLACE VIEW VW_LEGENDARIOS AS (SELECT ID, POKEDEX, NOMBRE, TYPE1, TYPE2, HP_ACTUAL, HP_MAX, LEGENDARY, ESTADO, FECHYHORA, PRIORIDAD FROM SANSANITO WHERE LEGENDARY='1')")
     cur.commit()
 
+"""
+Funcion: createState
+
+Input: Ninguno
+
+Output: String en caso de haber un estado, None en caso de no haber estado
+
+Funcionalidad: Funcion auxiliar para insertar pokemones que determina el estado del pokemon, el cual retorna
+                en forma de String o None
+"""
 def createState():
     print("Ingrese el estado del pokemon:")
     print("1. Envenenado")
@@ -71,6 +118,18 @@ def createState():
     elif newEstado==6:
         return None
 
+"""
+Funcion: create
+
+Input: Ninguno
+
+Output: Ninguno
+
+Funcionalidad: Le pide al usuario el nombre de un pokemon para insertar en la tabla
+                SANSANITO, obtiene los datos de este en la tabla POYO
+                y dependiendo de la capacidad y ciertas condiciones el pokemon es
+                admitido en la tabla SANSANITO o queda fuera
+"""
 def create():
     inPok=input("Ingrese el nombre del pokemon a ingresar: ")
     cur.execute("SELECT * FROM POYO WHERE nombre=?",(inPok))
@@ -232,6 +291,16 @@ def create():
 
     input("Pulse ENTER para continuar")
 
+"""
+Funcion: read
+
+Input: Ninguno
+
+Output: Ninguno
+
+Funcionalidad: Printea todos los datos de un pokemon de la tabla SANSANITO a eleccion del usuario
+                a traves de su ID o printea todos los datos de todos los pokemones de la misma tabla
+"""
 def read():
     print("Escoja una opcion")
     print("1. Mostrar estadisticas de un pokemon")
@@ -252,10 +321,18 @@ def read():
             leg="No"
         if estado==None:
             estado="Sin estado"
-        print("|ID:",idd,"|Pokedex:",dex,"|Nombre:",nom,"|Tipo:",tipo,"|HP Actual:",hpAct,"|HP Max:",hp,"|Es legendario:",leg,"|Estado:",estado,"|fecha y hora de ingreso:",fecha,"|Prioridad",prio,"|")
+        #print("|ID:",idd,"|Pokedex:",dex,"|Nombre:",nom,"|Tipo:",tipo,"|HP Actual:",hpAct,"|HP Max:",hp,"|Es legendario:",leg,"|Estado:",estado,"|fecha y hora de ingreso:",fecha,"|Prioridad",prio,"|")
+        print("---------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
+        print("|{:^8}|{:^10}|{:^20}|{:^30}|{:^12}|{:^10}|{:^13}|{:^15}|{:^30}|{:^12}|".format("ID","Pokedex","Nombre","Tipo","HP Actual","HP Max","Legendario","Estado","Fecha y hora de ingreso","Prioridad"))
+        print("---------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
+        print("|{:^8}|{:^10}|{:^20}|{:^30}|{:^12}|{:^10}|{:^13}|{:^15}|{:^30}|{:^12}|".format(idd, dex, nom, tipo, hpAct, hp, leg, estado, str(fecha), prio))
+        print("---------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
     elif inp==2:
         cur.execute("SELECT * FROM SANSANITO") #recibe todos los datos de todas las filas
         pokeList=cur.fetchall()
+        print("---------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
+        print("|{:^8}|{:^10}|{:^20}|{:^30}|{:^12}|{:^10}|{:^13}|{:^15}|{:^30}|{:^12}|".format("ID","Pokedex","Nombre","Tipo","HP Actual","HP Max","Legendario","Estado","Fecha y hora de ingreso","Prioridad"))
+        print("---------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
         for poke in pokeList: #recorre la lista con las tuplas de cada fila
             (idd, dex, nom, typ1, typ2, hpAct, hp, legen, estado, fecha, prio)=poke #descomprime la tupla correspondiente a una fila de la tabla
             if typ2==None:
@@ -268,9 +345,21 @@ def read():
                 leg="No"
             if estado==None:
                 estado="Sin estado"
-            print("|ID:",idd,"|Pokedex:",dex,"|Nombre:",nom,"|Tipo:",tipo,"|HP Actual:",hpAct,"|HP Max:",hp,"|Es legendario:",leg,"|Estado:",estado,"|fecha y hora de ingreso:",fecha,"|Prioridad",prio,"|")
+            #print("|ID:",idd,"|Pokedex:",dex,"|Nombre:",nom,"|Tipo:",tipo,"|HP Actual:",hpAct,"|HP Max:",hp,"|Es legendario:",leg,"|Estado:",estado,"|fecha y hora de ingreso:",fecha,"|Prioridad",prio,"|")
+            print("|{:^8}|{:^10}|{:^20}|{:^30}|{:^12}|{:^10}|{:^13}|{:^15}|{:^30}|{:^12}|".format(idd, dex, nom, tipo, hpAct, hp, leg, estado, str(fecha), prio))
+            print("---------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
     input("Pulse ENTER para continuar")
 
+"""
+Funcion: update
+
+Input: Ninguno
+
+Output: Ninguno
+
+Funcionalidad: Le da la eleccion al usuario de cambiar el HP actual del pokemon
+                o cambiar su estado a traves de su ID, el trigger hace que se actualice su prioridad
+"""
 def update():
     pokeID=input("Seleccione el ID del pokemon a modificar: ")
     cur.execute("SELECT * FROM SANSANITO WHERE id=?",(pokeID)) #recibe todos los datos de la fila con la id dada
@@ -319,6 +408,16 @@ def update():
             else:
                 print("Ingrese un estado valido")
 
+"""
+Funcion: delete
+
+Input: Ninguno
+
+Output: Ninguno
+
+Funcionalidad: Borra un pokemon de la tabla SANSANITO a eleccion del usuario
+                a traves del ID del pokemon
+"""
 def delete():
     pokeID=int(input("Ingrese la ID del pokemon a eliminar: "))
     cur.execute("SELECT nombre FROM SANSANITO WHERE id=?",(pokeID)) #compara la hora de netrada con la hora registrada para obtener el id
@@ -328,39 +427,94 @@ def delete():
     print("Se ha eliminado a",nom,"con el ID",pokeID)
     input("Pulse ENTER para continuar")
 
+"""
+Funcion: top10max
+
+Input: Ninguno
+
+Output: Ninguno
+
+Funcionalidad: Printea el ID, el nombre y la prioridad de los 10 pokemones
+                 con mayor prioridad de la tabla SANSANITO
+"""
 def top10max():
     cur.execute("SELECT prioridad,id,nombre FROM SANSANITO ORDER BY prioridad DESC")
     pokeList=cur.fetchall()
     cont=0
+    print("--------------------------------------------")
+    print("|{:^8}|{:^20}|{:^12}|".format("ID","Nombre","Prioridad"))
+    print("--------------------------------------------")
     for poke in pokeList:
         (prio, idd, nom)=poke
         if cont<10:
-            print("|ID:",idd,"|Nombre:",nom,"|Prioridad:",prio,"|")
+            #print("|ID:",idd,"|Nombre:",nom,"|Prioridad:",prio,"|")
+            print("|{:^8}|{:^20}|{:^12}|".format(idd, nom, prio))
+            print("--------------------------------------------")
             cont+=1
         else:
             break
     input("Pulse ENTER para continuar")
 
+"""
+Funcion: top10min
+
+Input: Ninguno
+
+Output: Ninguno
+
+Funcionalidad: Printea el ID, el nombre y la prioridad de los 10 pokemones
+                 con menor prioridad de la tabla SANSANITO
+"""
 def top10min():
     cur.execute("SELECT prioridad,id,nombre FROM SANSANITO ORDER BY prioridad ASC")
     pokeList=cur.fetchall()
     cont=0
+    print("--------------------------------------------")
+    print("|{:^8}|{:^20}|{:^12}|".format("ID","Nombre","Prioridad"))
+    print("--------------------------------------------")
     for poke in pokeList:
         (prio, idd, nom)=poke
         if cont<10:
-            print("|ID:",idd,"|Nombre:",nom,"|Prioridad:",prio,"|")
+            #print("|ID:",idd,"|Nombre:",nom,"|Prioridad:",prio,"|")
+            print("|{:^8}|{:^20}|{:^12}|".format(idd, nom, prio))
+            print("--------------------------------------------")
             cont+=1
         else:
             break
     input("Pulse ENTER para continuar")
 
+"""
+Funcion: pokeTime
+
+Input: Ninguno
+
+Output: Ninguno
+
+Funcionalidad: Printea el ID, el nombre y la fecha y hora de ingreso
+                del pokemon que lleva mas tiempo en la tabla SANSANITO
+"""
 def pokeTime():
     cur.execute("SELECT fechyhora,id,nombre FROM SANSANITO ORDER BY fechyhora ASC")
     poke=cur.fetchone()
     (fecha, idd, nom)=poke
-    print("|ID:",idd,"|Nombre:",nom,"|Fecha y hora de ingreso:",fecha,"|")
+    #print("|ID:",idd,"|Nombre:",nom,"|Fecha y hora de ingreso:",fecha,"|")
+    print("--------------------------------------------------------------")
+    print("|{:^8}|{:^20}|{:^30}|".format("ID","Nombre","Fecha y hora de ingreso"))
+    print("--------------------------------------------------------------")
+    print("|{:^8}|{:^20}|{:^30}|".format(idd, nom, str(fecha)))
+    print("--------------------------------------------------------------")
     input("Pulse ENTER para continuar")
 
+"""
+Funcion: pokeState
+
+Input: Ninguno
+
+Output: Ninguno
+
+Funcionalidad: Printea el ID, el nombre y el estado de todos los pokemones
+                que tengan el estado ingresado por el usuario
+"""
 def pokeState():
     print("Ingrese el estado que desea ver:")
     print("1. Envenenado")
@@ -376,64 +530,119 @@ def pokeState():
         if len(pokeList)==0:
             print("No hay pokemones con ese estado")
         else:
+            print("-----------------------------------------------")
+            print("|{:^8}|{:^20}|{:^15}|".format("ID","Nombre","Estado"))
+            print("-----------------------------------------------")
             for poke in pokeList:
                 (idd, nom, state)=poke
-                print("|ID:",idd,"|Nombre:",nom,"|Estado:",state,"|")
+                #print("|ID:",idd,"|Nombre:",nom,"|Estado:",state,"|")
+                print("|{:^8}|{:^20}|{:^15}|".format(idd, nom, state))
+                print("-----------------------------------------------")
     elif userState==2:
         cur.execute("SELECT id,nombre,estado FROM SANSANITO WHERE estado='Paralizado'")
         pokeList=cur.fetchall()
         if len(pokeList)==0:
             print("No hay pokemones con ese estado")
         else:
+            print("-----------------------------------------------")
+            print("|{:^8}|{:^20}|{:^15}|".format("ID","Nombre","Estado"))
+            print("-----------------------------------------------")
             for poke in pokeList:
                 (idd, nom, state)=poke
-                print("|ID:",idd,"|Nombre:",nom,"|Estado:",state,"|")
+                #print("|ID:",idd,"|Nombre:",nom,"|Estado:",state,"|")
+                print("|{:^8}|{:^20}|{:^15}|".format(idd, nom, state))
+                print("-----------------------------------------------")
     elif userState==3:
         cur.execute("SELECT id,nombre,estado FROM SANSANITO WHERE estado='Quemado'")
         pokeList=cur.fetchall()
         if len(pokeList)==0:
             print("No hay pokemones con ese estado")
         else:
+            print("-----------------------------------------------")
+            print("|{:^8}|{:^20}|{:^15}|".format("ID","Nombre","Estado"))
+            print("-----------------------------------------------")
             for poke in pokeList:
                 (idd, nom, state)=poke
-                print("|ID:",idd,"|Nombre:",nom,"|Estado:",state,"|")
+                #print("|ID:",idd,"|Nombre:",nom,"|Estado:",state,"|")
+                print("|{:^8}|{:^20}|{:^15}|".format(idd, nom, state))
+                print("-----------------------------------------------")
     elif userState==4:
         cur.execute("SELECT id,nombre,estado FROM SANSANITO WHERE estado='Dormido'")
         pokeList=cur.fetchall()
         if len(pokeList)==0:
             print("No hay pokemones con ese estado")
         else:
+            print("-----------------------------------------------")
+            print("|{:^8}|{:^20}|{:^15}|".format("ID","Nombre","Estado"))
+            print("-----------------------------------------------")
             for poke in pokeList:
                 (idd, nom, state)=poke
-                print("|ID:",idd,"|Nombre:",nom,"|Estado:",state,"|")
+                #print("|ID:",idd,"|Nombre:",nom,"|Estado:",state,"|")
+                print("|{:^8}|{:^20}|{:^15}|".format(idd, nom, state))
+                print("-----------------------------------------------")
     elif userState==5:
         cur.execute("SELECT id,nombre,estado FROM SANSANITO WHERE estado='Congelado'")
         pokeList=cur.fetchall()
         if len(pokeList)==0:
             print("No hay pokemones con ese estado")
         else:
+            print("-----------------------------------------------")
+            print("|{:^8}|{:^20}|{:^15}|".format("ID","Nombre","Estado"))
+            print("-----------------------------------------------")
             for poke in pokeList:
                 (idd, nom, state)=poke
-                print("|ID:",idd,"|Nombre:",nom,"|Estado:",state,"|")
+                #print("|ID:",idd,"|Nombre:",nom,"|Estado:",state,"|")
+                print("|{:^8}|{:^20}|{:^15}|".format(idd, nom, state))
+                print("-----------------------------------------------")
     elif userState==6:
         cur.execute("SELECT id,nombre,estado FROM SANSANITO WHERE estado IS NULL")
         pokeList=cur.fetchall()
         if len(pokeList)==0:
             print("No hay pokemones con ese estado")
         else:
+            print("-----------------------------------------------")
+            print("|{:^8}|{:^20}|{:^15}|".format("ID","Nombre","Estado"))
+            print("-----------------------------------------------")
             for poke in pokeList:
                 (idd, nom, state)=poke
-                print("|ID:",idd,"|Nombre:",nom,"|Estado:",state,"|")
+                state="Sin estado"
+                #print("|ID:",idd,"|Nombre:",nom,"|Estado:",state,"|")
+                print("|{:^8}|{:^20}|{:^15}|".format(idd, nom, state))
+                print("-----------------------------------------------")
     input("Pulse ENTER para continuar")
+"""
+Funcion: printPrioridad
 
+Input: Ninguno
+
+Output: Ninguno
+
+Funcionalidad: Printea el nombre, el HP actual, el HP maximo y la prioridad 
+                de todos los pokemon que hay en la tabla SANSANITO ordenados por prioridad
+"""
 def printPrioridad():
     cur.execute("SELECT nombre,hp_actual,hp_max,prioridad FROM SANSANITO ORDER BY prioridad DESC")
     pokeList=cur.fetchall()
+    print("-----------------------------------------------------------")
+    print("|{:^20}|{:^12}|{:^10}|{:^12}|".format("Nombre","HP Actual","HP Max","Prioridad"))
+    print("-----------------------------------------------------------")
     for poke in pokeList:
         (nom,hpAct,hp,prio)=poke
-        print("|Nombre:",nom,"|HP Actual:",hpAct,"|HP Max",hp,"|Prioridad:",prio,"|")
+        #print("|Nombre:",nom,"|HP Actual:",hpAct,"|HP Max",hp,"|Prioridad:",prio,"|")
+        print("|{:^20}|{:^12}|{:^10}|{:^12}|".format(nom, hpAct, hp, prio))
+        print("-----------------------------------------------------------")
     input("Pulse ENTER para continuar")
+"""
+Funcion: repetido
 
+Input: Ninguno
+
+Output: Ninguno
+
+Funcionalidad: Printea el nombre del pokemon mas repetido en la
+                tabla SANSANITO y muestra la cantidad de repeticiones,
+                en caso de empate, escoge por orden alfabetico
+"""
 def repetido():
     cur.execute("SELECT nombre, COUNT( nombre ) AS total FROM SANSANITO GROUP BY nombre ORDER BY total DESC")
     repe=cur.fetchall()
@@ -442,13 +651,25 @@ def repetido():
     else:
         print("El pokemon mas repetido es",repe[0][0],"con",int(repe[0][1]),"repeticiones")
     input("Pulse ENTER para continuar")
+"""
+Funcion: printLegendarios
 
+Input: Ninguno
+
+Output: Ninguno
+
+Funcionalidad: Printea todos los datos de los legendarios que estan
+                en la tabla SANSANITO utilizando la vista creada
+"""
 def printLegendarios():
     cur.execute("SELECT * FROM VW_LEGENDARIOS")
     legenList=cur.fetchall()
     if len(legenList)==0:
         print("No hay pokemones legendarios ingresados")
     else:
+        print("---------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
+        print("|{:^8}|{:^10}|{:^20}|{:^30}|{:^12}|{:^10}|{:^13}|{:^15}|{:^30}|{:^12}|".format("ID","Pokedex","Nombre","Tipo","HP Actual","HP Max","Legendario","Estado","Fecha y hora de ingreso","Prioridad"))
+        print("---------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
         for legen in legenList:
             (idd, dex, nom, typ1, typ2, hpAct, hp, legen, estado, fecha, prio)=legen #descomprime la tupla correspondiente a una fila de la tabla
             if typ2==None:
@@ -461,10 +682,21 @@ def printLegendarios():
                 leg="No"
             if estado==None:
                 estado="Sin estado"
-            print("|ID:",idd,"|Pokedex:",dex,"|Nombre:",nom,"|Tipo:",tipo,"|HP Actual:",hpAct,"|HP Max:",hp,"|Es legendario:",leg,"|Estado:",estado,"|fecha y hora de ingreso:",fecha,"|Prioridad",prio,"|")
+            #print("|ID:",idd,"|Pokedex:",dex,"|Nombre:",nom,"|Tipo:",tipo,"|HP Actual:",hpAct,"|HP Max:",hp,"|Es legendario:",leg,"|Estado:",estado,"|fecha y hora de ingreso:",fecha,"|Prioridad",prio,"|")
+            print("|{:^8}|{:^10}|{:^20}|{:^30}|{:^12}|{:^10}|{:^13}|{:^15}|{:^30}|{:^12}|".format(idd, dex, nom, tipo, hpAct, hp, leg, estado, str(fecha), prio))
+            print("---------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
     input("Pulse ENTER para continuar")
+"""
+Funcion: llenarArtificial
 
-def llenarArtificial(): ##terminar
+Input: Ninguno
+
+Output: Ninguno
+
+Funcionalidad: Rellena los 50 espacios disponibles de la tabla SANSANITO
+                con pokemones aleatorios, hp actual aleatoria y estado aleatorio
+"""
+def llenarArtificial():
     cont=0
     espacio=0
     while cont!=50:
@@ -538,7 +770,7 @@ while True:
             else:
                 print("Ingrese una opcion valida")
     elif user==2:
-        create()##cambiar
+        create()
     elif user==3:
         top10max()
     elif user==4:
